@@ -1,6 +1,6 @@
 const { Thought, User } = require("../models");
 
-module.export = {
+module.exports = {
   // GET to get all thoughts
   getThoughts(req, res) {
     Thought.find()
@@ -9,17 +9,15 @@ module.export = {
   },
   // GET to get a single thought by its _id
   getThoughtById(req, res) {
-    Thought.findOne({ _id: req.params.thoughtId })
+    Thought.findById(req.params.thoughtId)
       .select("-_v")
-      .sort({
-        _id: -1,
-      })
+     
       .then((thought) =>
-        !thought
-          ? res.status(404).json({ message: `No thought with that ID` })
-          : res.json(thought)
-      )
-      .catch((err) => res.status(500).json(err));
+        thought
+        ? res.status(200).json(thought)
+        : res.status(404).json({ message: `No thought with that ID` })
+        )
+      .catch((err) => res.status(500).json({error:err}));
   },
   // POST to create a new thought (to push the created thought's _id to the associated user's thoughts array field)
   createThought({ body }, res) {
@@ -27,7 +25,7 @@ module.export = {
       .then((thought) => {
         return User.findOneAndUpdate(
           { _id: body.userId },
-          { $push: { thought: thoughtId } },
+          { $push: { thoughts: thought._id } },
           { new: true }
         );
       })

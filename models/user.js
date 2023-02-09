@@ -1,7 +1,8 @@
-const mongoose = require("mongoose");
+const { Schema, model } = require('mongoose');
+const Thought = require('./Thought');
 
 //  -- Schema to create User Model
-const userSchema = new mongoose.Schema(
+const userSchema = new Schema(
   {
     username: {
       type: String,
@@ -34,6 +35,7 @@ const userSchema = new mongoose.Schema(
   {
     toJSON: {
       virtuals: true,
+      getters: true,
     },
     id: false,
   }
@@ -45,7 +47,7 @@ userSchema.virtual("friendCount").get(function () {
 });
 
 //  -- Initialize User Model
-const User = mongoose.model("User", userSchema);
+const User = model("User", userSchema);
 
 // -- Export User Model --
 module.exports = User;

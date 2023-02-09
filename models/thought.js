@@ -1,40 +1,46 @@
-const mongoose = require("mongoose");
+const { Schema, model, Types } = require("mongoose");
 
 //  -- Schema to create Thought Model
 //  -- Define the shape for Reaction subdocument
-const reactionSchema = new mongoose.Schema({
-  reactionId: {
-    type: mongoose.ObjectId,
-    default: () => new DataTypes.ObjectId(),
+const reactionSchema = new Schema(
+  {
+    reactionId: {
+      type: Schema.Types.ObjectId,
+      default: () => new DataTypes.ObjectId(),
+    },
+    reactionBody: {
+      type: String,
+      required: true,
+      minlength: 1,
+      maxlength: 280,
+      trim: true,
+    },
+    username: {
+      type: String,
+      required: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      // get: (timestamp) => dateFormat(timestamp),
+    },
   },
-  reactionBody: {
-    type: String,
-    required: true,
-    max: [280, "280 Character Maximum"],
-  },
-  username: {
-    type: String,
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-    get: (timestamp) => dateFormat(timestamp),
-  },
-  toJSON: {
-    getters: true,
-  },
-  id: false,
-});
+  {
+    toJSON: {
+      getters: true,
+    },
+    id: false,
+  }
+);
 
 //  -- Define the shape of parent document
-const thoughtSchema = new mongoose.Schema(
+const thoughtSchema = new Schema(
   {
     thoughtText: {
       type: String,
       required: true,
-      min: [1, "Must be between 1 and 280 characters"],
-      max: [280, "Must be between 1 and 280 characters"],
+      minlength: 1,
+      maxlength: 280,
     },
     createdAt: {
       type: Date,
@@ -61,7 +67,7 @@ thoughtSchema.virtual("reactionCount").get(function () {
 });
 
 //  -- Initialize Thought Model
-const Thought = mongoose.model("Thought", thoughtSchema);
+const Thought = model("Thought", thoughtSchema);
 
 // -- Export Thought Model --
 module.exports = Thought;

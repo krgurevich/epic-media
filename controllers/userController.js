@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const { User, Thought } = require("../models");
 
 // /api/users
@@ -10,7 +11,7 @@ module.exports = {
   },
   // -- GET a single user by its `_id` and populated thought and friend data
   getUserById(req, res) {
-    User.findOne({ _id: req.params.userID })
+    User.findOne({ _id: req.query.userID })
       .populate({
         path: "thoughts",
         select: "-_v",
@@ -39,8 +40,9 @@ module.exports = {
   },
   // PUT to update a user by its `_id`
   updateUser(req, res) {
+    console.log(req.query);
     User.findByIdAndUpdate(
-      { _id: req.params.userId },
+      { _id: req.query.userId },
       { $set: req.body },
       { runValidators: true, new: true }
     )
@@ -52,8 +54,8 @@ module.exports = {
       .catch((err) => res.status(500).json(err));
   },
   // DELETE to remove user by its `_id`
-  deleteUser(req, res) {
-    User.findByIdAndDelete({ _id: req.params.userId })
+  deleteUserById(req, res) {
+    User.findByIdAndDelete({ _id: req.query.userId })
       .then((user) =>
         !user
           ? res.status(404).json({ message: "No user with that ID" })
@@ -64,7 +66,7 @@ module.exports = {
   },
   // DELETE a user's associated thoughts when deleted
   deleteUser(req, res) {
-    User.findByIdAndDelete({ _id: req.params.userId })
+    User.findByIdAndDelete({ _id: req.query.userId })
       .then((user) =>
         !user
           ? res.status(404).json({ message: "No user with that ID" })
@@ -79,10 +81,12 @@ module.exports = {
   //   NEED HELP WITH THIS ----------------------
   // /api/users/:userId/friends/:friendId
   // POST to add a new friend to a user's friend list
-  addFriend({ req, res }) {
+  addFriend(req, res) {
+    let previousFriends = User.findById(req.params.userId).friends;
+    previousFriends = previousFriends || [];
     User.findOneAndUpdate(
       { _id: req.params.userId },
-      { $addToSet: { friends: req.body } },
+      { $addToSet: { friends: [...previousFriends, req.body] } },
       { runValidators: true, new: true }
     )
       .then((user) =>
@@ -97,16 +101,29 @@ module.exports = {
 
   // DELETE to remove a friend from a user's friend list
   removeFriend(req, res) {
-    User.findByIdAndUpdate(
-      { _id: req.params.studentId },
-      { $pull: { friend: { friendId: req.params.friendId } } },
-      { runValidators: true, new: true }
-    )
-      .then((user) =>
-        !user
-          ? res.status(404).json({ message: "No user found with that ID" })
-          : res.json(user)
-      )
-      .catch((err) => res.status(500).json(err));
+    let previousFriends = [];
+    User.findById(req.params.userId, function (err, docs) {
+      if (err) console.log(err);
+      else {
+        previousFriends = docs.friends;
+
+        previousFriends = previousFriends || [];
+        const newFriends = previousFriends.filter(
+          (friend) => friend != req.params.friendId
+        );
+        console.log(newFriends)
+        User.updat(
+          { _id: req.params.userId },
+          { $addToSet: { friends: [] } },
+          { Validators: true, new: true }
+        )
+          .then((user) =>
+            !user
+              ? res.status(404).json({ message: "No user found with that ID" })
+              : res.json(user)
+          )
+          .catch((err) => res.status(500).json(err));
+      }
+    });
   },
 };
