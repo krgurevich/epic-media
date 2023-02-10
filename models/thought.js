@@ -2,6 +2,19 @@ const { Schema, model, Types } = require("mongoose");
 
 //  -- Schema to create Thought Model
 //  -- Define the shape for Reaction subdocument
+//  -- Format Date --
+function formatDate(date) {
+  var d = new Date(date),
+      month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+  if (month.length < 2) month = '0' + month;
+  if (day.length < 2) day = '0' + day;
+
+  return [year, month, day].join('-');
+}
+
 const reactionSchema = new Schema(
   {
     reactionId: {
@@ -20,9 +33,9 @@ const reactionSchema = new Schema(
       required: true,
     },
     createdAt: {
-      type: Date,
+      type: String,
       default: Date.now,
-      // get: (timestamp) => dateFormat(timestamp),
+      set: date => formatDate(date)
     },
   },
   {
@@ -43,8 +56,9 @@ const thoughtSchema = new Schema(
       maxlength: 280,
     },
     createdAt: {
-      type: Date,
+      type: String,
       default: Date.now,
+      set: date => formatDate(date)
     },
     username: {
       type: String,
@@ -58,6 +72,7 @@ const thoughtSchema = new Schema(
       virtuals: true,
     },
     id: false,
+ 
   }
 );
 
