@@ -9,6 +9,7 @@ module.exports = {
   },
   // GET to get a single thought by its _id -- +
   getThoughtById(req, res) {
+    console.log(req.params.thoughtId);
     Thought.findById({ _id: req.params.thoughtId })
       .select("-_v")
       .then((thought) =>
@@ -52,15 +53,27 @@ module.exports = {
       .catch((err) => res.status(500).json(err));
   },
   // -- DELETE to remove a thought by its _id --
-  deleteThoughtById(req, res) {
-    Thought.findByIdAndDelete({ _id: req.query.thoughtId })
-      .then((thought) =>
-        !thought
-          ? res.status(404).json({ message: "No thought with that ID" })
-          : res.json(thought)
-      )
-      .then(() => res.json({ message: "Thought deleted!" }))
-      .catch((err) => res.status(500).json(err));
+  removeThought({ params, query }, res) {
+    Thought.findOneAndDelete({ _id: params.thoughtId })
+      .then((thought) => {
+        if (!thought) {
+          res.status(404).json({ message: "No thoughts found with that id!" });
+          return;
+        }
+        return User.findOneAndUpdate(
+          { _id: query.userId },
+          { $pull: { thoughts: params.thoughtId } },
+          { new: true }
+        );
+      })
+      .then((user) => {
+        if (!user) {
+          res.status(404).json({ message: "No User found with this id!" });
+          return;
+        }
+        res.json(user);
+      })
+      .catch((err) => res.json(err));
   },
   // /api/thoughts/:thoughtId/reactions
 
